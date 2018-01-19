@@ -1,0 +1,16 @@
+[info]
+title=Font Awesome
+desc=Search FontAwesome Icons in sidebar and insert the codes in editor. 
+type=cudatext-plugin
+subdir=cuda_fontawesome
+homepage=https://github.com/TomBraider42/cuda_fontawesome
+
+[item1]
+section=events
+events=on_start
+
+[item2]
+section=commands
+caption=Font Awesome\Config...
+method=show_config
+menu=o
