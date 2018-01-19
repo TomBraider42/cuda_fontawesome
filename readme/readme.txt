@@ -3,9 +3,9 @@ Plugin for CudaText
 
 Search Font Awesome icons in sidebar and insert the codes in current editor.
 
-=== IMPORTANT ============================================
-Besure you have installed the fonts from vendor/fonts.zip.
-==========================================================
+=== IMPORTANT =============================================
+Besure you have installed the fonts from vendors/fonts.zip.
+===========================================================
 
 Check Plugins -> Font Awesome -> Config for code format.
 
