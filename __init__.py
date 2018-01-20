@@ -6,9 +6,6 @@ import re
 import codecs
 
 
-MIN_VERSION = '1.34.1'
-
-
 class Command:
 
 
@@ -23,8 +20,6 @@ class Command:
     load options
     '''
     def __init__(self):
-
-        self.check_app_version()
 
         if os.path.isfile(self.options_filename):
             with open(self.options_filename) as fin:
@@ -73,8 +68,9 @@ class Command:
             font = 'fas'
 
         # get items
-        items = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc).get('items')
-        selected = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc).get('val')
+        props = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc)
+        items = props.get('items')
+        selected = props.get('val')
         items_names = [i.split('\r')[0] for i in items.split('\t') if i]
         items_codes = [i.split('\r')[1] for i in items.split('\t') if i]
 
@@ -183,16 +179,3 @@ class Command:
                 if name and hex:
                     self.codes.append([name, hex])
                     name = ''
-
-
-    '''
-    check min needed app version
-    '''
-    def check_app_version(self):
-
-        if app.app_exe_version() < MIN_VERSION and not self.version_warning:
-            # warn only once
-            self.version_warning = True
-            s = ['Plugin "' + os.path.basename(os.path.dirname(__file__)) + '" needs', 'CudaText version >= ' + MIN_VERSION + ' (now ' + app.app_exe_version() + ')']
-            print(' '.join(s))
-            msg_box('\n'.join(s), app.MB_OK + app.MB_ICONWARNING)
