@@ -1,3 +1,7 @@
 
+2018.01.23
+~ changed from listview to listbox_ex
++ config file for font names and size 
+
 2018.01.20
 initial version

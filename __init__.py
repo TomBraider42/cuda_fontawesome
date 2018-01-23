@@ -11,9 +11,14 @@ class Command:
 
     title = 'Font Awesome'
     options_filename = os.path.join(app_path(APP_DIR_SETTINGS), 'cuda_fontawesome.json')
-    options = {'code_format': '<i class="{font} fa-{name}"></i> '}
+    options = {
+        'iconsize': 24,
+        'FONT_SOLID': 'Font Awesome 5 Free Solid',
+        'FONT_REGULAR': 'Font Awesome 5 Free Regular',
+        'FONT_BRANDS': 'Font Awesome 5 Brands Regular',
+        'code_format': '<i class="{font} fa-{name}"></i>'
+        }
     codes = []
-    version_warning = False
 
 
     '''
@@ -23,7 +28,9 @@ class Command:
 
         if os.path.isfile(self.options_filename):
             with open(self.options_filename) as fin:
-                self.options = json.load(fin)
+                self.options.update(json.load(fin))
+
+        self.font = self.options['FONT_SOLID']
 
 
     '''
@@ -41,15 +48,121 @@ class Command:
 
 
     '''
-    open config file
+    create side panel
     '''
-    def show_config(self):
+    def init_panel(self):
 
-        if not os.path.isfile(self.options_filename):
-            with open(self.options_filename, mode="w", encoding='utf8') as fout:
-                json.dump(self.options, fout, indent=0)
+        h = dlg_proc(0, DLG_CREATE)
+        self.h_dlg = h
+        fontsize = self.options['iconsize'] // 2
+        self.color_bg = ed.get_prop(PROP_COLOR, value=COLOR_ID_TextBg)
+        self.color_sel = ed.get_prop(PROP_COLOR, value=COLOR_ID_MinimapSelBg)
+        self.color_font = ed.get_prop(PROP_COLOR, value=COLOR_ID_TextFont)
 
-        file_open(self.options_filename)
+
+        # font select
+        n = dlg_proc(h, DLG_CTL_ADD, 'combo_ro')
+        dlg_proc(h, DLG_CTL_PROP_SET, index=n, prop={
+            'name': 'fafont',
+            'items': 'Solid\tRegular\tBrands',
+            'hint': 'Font',
+            'val': 0,
+            'align': ALIGN_TOP,
+            'y': 0,
+            'font_size': fontsize,
+            'act': True,
+            'on_change': lambda idd, idc, data: self.set_font(idd, idc, data)
+            })
+
+        # filter
+        self.filterid = dlg_proc(h, DLG_CTL_ADD, 'edit')
+        dlg_proc(h, DLG_CTL_PROP_SET, index=self.filterid, prop={
+            'name': 'filter',
+            'align': ALIGN_TOP,
+            'hint': 'Filter',
+            'y': self.options['iconsize'] + 5,
+            'font_size': fontsize,
+            'props': (False, False, True),
+            'act': True,
+            'on_change': lambda idd, idc, data: self.fill_list()
+            })
+
+        # listbox
+        l = dlg_proc(h, DLG_CTL_ADD, 'listbox_ex')
+        dlg_proc(h, DLG_CTL_PROP_SET, index=l, prop={
+            'name': 'falist',
+            'align': ALIGN_CLIENT,
+            'on_draw_item': self.callback_listbox_drawitem,
+            'on_click': lambda idd, idc, data: self.get_icon(idd, idc, data)
+            })
+
+        self.h_list = dlg_proc(h, DLG_CTL_HANDLE, index=l)
+        listbox_proc(self.h_list, LISTBOX_SET_ITEM_H, index=self.options['iconsize'])
+        listbox_proc(self.h_list, LISTBOX_SET_DRAWN, index=1)
+
+        self.fill_list()
+
+        return h
+
+
+    '''
+    fill list with items
+    '''
+    def fill_list(self):
+
+        filter = dlg_proc(self.h_dlg, DLG_CTL_PROP_GET, index=self.filterid).get('val')
+
+        listbox_proc(self.h_list, LISTBOX_DELETE_ALL)
+        for code in self.codes:
+            if filter in code:
+                listbox_proc(self.h_list, LISTBOX_ADD, index=-1, text=code)
+        listbox_proc(self.h_list, LISTBOX_SET_TOP, index=0)
+        listbox_proc(self.h_list, LISTBOX_SET_SEL, index=0)
+
+
+    '''
+    create list item
+    '''
+    def callback_listbox_drawitem(self, id_dlg, id_ctl, data='', info=''):
+
+        idc = data['canvas']
+        r = data['rect']
+        index = data['index']
+        selected = listbox_proc(self.h_list, LISTBOX_GET_SEL)
+        item = listbox_proc(self.h_list, LISTBOX_GET_ITEM, index=index)[0].split('|')
+        name = item[0]
+        hex = item[1]
+        iconsize = self.options['iconsize']
+
+        # background
+        bgcolor = self.color_sel if index == selected else self.color_bg
+        canvas_proc(idc, CANVAS_SET_BRUSH, color=bgcolor, style=BRUSH_SOLID)
+        canvas_proc(idc, CANVAS_RECT_FILL, x=r[0], y=r[1], x2=r[2], y2=r[3])
+
+        # name
+        canvas_proc(idc, CANVAS_SET_FONT, color=self.color_font, text='Arial', size=iconsize//2)
+        size = canvas_proc(idc, CANVAS_GET_TEXT_SIZE, text=name)
+        canvas_proc(idc, CANVAS_TEXT, text=name, x=iconsize+10, y=(r[1]+r[3]-size[1])//2)
+
+        # icon
+        canvas_proc(idc, CANVAS_SET_FONT, text=self.font, size=iconsize//2+2)
+        canvas_proc(idc, CANVAS_TEXT, text=chr(int(hex, 16)), x=5, y=(r[1]+r[3]-size[1])//2)
+
+
+    '''
+    reload icon list after changing font
+    '''
+    def set_font(self, idd, idc, data):
+
+        cap = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc).get('cap')
+        if cap == 'Brands':
+            self.font = self.options['FONT_BRANDS']
+        elif cap == 'Regular':
+            self.font = self.options['FONT_REGULAR']
+        else:
+            self.font = self.options['FONT_SOLID']
+
+        self.fill_list()
 
 
     '''
@@ -68,16 +181,13 @@ class Command:
             font = 'fas'
 
         # get items
-        props = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc)
-        items = props.get('items')
-        selected = props.get('val')
-        items_names = [i.split('\r')[0] for i in items.split('\t') if i]
-        items_codes = [i.split('\r')[1] for i in items.split('\t') if i]
+        index_sel = listbox_proc(self.h_list, LISTBOX_GET_SEL)
+        item = listbox_proc(self.h_list, LISTBOX_GET_ITEM, index=index_sel)[0].split('|')
 
         # create selected code
-        name = items_names[int(selected)]
-        unicode = items_codes[int(selected)].strip()
-        hexcode = ''.join(["%02X " % ord(x) for x in unicode]).strip()
+        name = item[0]
+        hexcode = item[1]
+        unicode = chr(int(hexcode, 16))
         code = self.options['code_format'].format(font=font, name=name, unicode=unicode, hexcode=hexcode)
 
         # insert code
@@ -88,69 +198,6 @@ class Command:
 
 
     '''
-    reload icon list after changing font
-    '''
-    def set_font(self, idd, idc, data):
-
-        cap = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc).get('cap')
-        listid = dlg_proc(idd, DLG_CTL_FIND, prop='falist')
-
-        if cap == 'Brands':
-            font = 'Font Awesome 5 Brands Regular'
-        elif cap == 'Regular':
-            font = 'Font Awesome 5 Free Regular'
-        else:
-            font = 'Font Awesome 5 Free Solid'
-        dlg_proc(idd, DLG_CTL_PROP_SET, index=listid, prop={'font_name': font})
-
-
-    '''
-    create side panel
-    '''
-    def init_panel(self):
-
-        h = dlg_proc(0, DLG_CREATE)
-
-        n = dlg_proc(h, DLG_CTL_ADD, 'combo_ro')
-        dlg_proc(h, DLG_CTL_PROP_SET, index=n, prop={
-            'name': 'fafont',
-            'items': 'Solid\tRegular\tBrands',
-            'val': 0,
-            'align': ALIGN_TOP,
-            'y': 0,
-            'font_size': 12,
-            'act': True,
-            'on_change': lambda idd, idc, data: self.set_font(idd, idc, data)
-            })
-
-        n = dlg_proc(h, DLG_CTL_ADD, 'filter_listview')
-        dlg_proc(h, DLG_CTL_PROP_SET, index=n, prop={
-            'name': 'f_falist',
-            'align': ALIGN_TOP,
-            'y': 30,
-            'font_size': 12,
-            'props': (True)
-            })
-
-        items = 'x=0\rIcon=45\rText=200\t'
-        items = items + '\t'.join(code[0] + '\r ' + chr(int(code[1], 16)) + '\r' + u'\u0080'.join(list(code[0])) for code in self.codes)
-
-        l = dlg_proc(h, DLG_CTL_ADD, 'listview')
-        dlg_proc(h, DLG_CTL_PROP_SET, index=l, prop={
-            'name': 'falist',
-            'items': items,
-            'align': ALIGN_CLIENT,
-            'font_name': 'Font Awesome 5 Free Solid',
-            'font_size': 12,
-            'act': True,
-            'on_click': lambda idd, idc, data: self.get_icon(idd, idc, data),
-            'props': (True)
-            })
-
-        return h
-
-
-    '''
     parse CSS file for icon codes
     '''
     def parse_css(self, text):
@@ -158,13 +205,10 @@ class Command:
         regtag = re.compile(r'(?:.fa-)(.*)(?:\:before)', re.I)
         reghex = re.compile(r'(?:content\:\s*\"\\)(.*)(?:")', re.I)
 
-        line_nr = 0
         name = ''
         hex = ''
 
         for line in text:
-            line_nr += 1
-
             ls = line.strip()
 
             # find tag
@@ -177,5 +221,16 @@ class Command:
             foundhex = reghex.findall(line)
             for hex in foundhex:
                 if name and hex:
-                    self.codes.append([name, hex])
+                    self.codes.append(name + '|' + hex)
                     name = ''
+
+
+    '''
+    open config file
+    '''
+    def show_config(self):
+
+        with open(self.options_filename, mode="w", encoding='utf8') as fout:
+            json.dump(self.options, fout, indent=2)
+
+        file_open(self.options_filename)
