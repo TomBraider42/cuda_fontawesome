@@ -21,11 +21,10 @@ class Command:
     codes = []
 
 
-    '''
-    load options
-    '''
     def __init__(self):
-
+        '''
+        load options
+        '''
         if os.path.isfile(self.options_filename):
             with open(self.options_filename) as fin:
                 self.options.update(json.load(fin))
@@ -33,11 +32,10 @@ class Command:
         self.font = self.options['FONT_SOLID']
 
 
-    '''
-    read CSS file, add site panel
-    '''
     def on_start(self, ed):
-
+        '''
+        read CSS file, add site panel
+        '''
         dir = os.path.dirname(__file__)
 
         with codecs.open(os.path.join(dir, 'vendors', 'fontawesome.css'), 'r', encoding='utf-8', errors='ignore') as text:
@@ -47,32 +45,45 @@ class Command:
         app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg, os.path.join(dir, 'fontawesome.png')))
 
 
-    '''
-    create side panel
-    '''
     def init_panel(self):
-
+        '''
+        create side panel
+        '''
         h = dlg_proc(0, DLG_CREATE)
         self.h_dlg = h
         fontsize = self.options['iconsize'] // 2
-        self.color_bg = ed.get_prop(PROP_COLOR, value=COLOR_ID_TextBg)
-        self.color_sel = ed.get_prop(PROP_COLOR, value=COLOR_ID_MinimapSelBg)
-        self.color_font = ed.get_prop(PROP_COLOR, value=COLOR_ID_TextFont)
 
+        # get theme colors
+        ui = app_proc(PROC_THEME_UI_DATA_GET, '')
+        for c in ui:
+            if c['name'] == 'TreeBg':
+                self.color_bg = c['color']
+            elif c['name'] == 'TreeFont':
+                self.color_font = c['color']
+            elif c['name'] == 'TreeSelBg':
+                self.color_sel_bg = c['color']
+            elif c['name'] == 'TreeSelFont':
+                self.color_sel_font = c['color']
 
         # font select
-        n = dlg_proc(h, DLG_CTL_ADD, 'combo_ro')
+        n = dlg_proc(h, DLG_CTL_ADD, 'button_ex')
         dlg_proc(h, DLG_CTL_PROP_SET, index=n, prop={
             'name': 'fafont',
-            'items': 'Solid\tRegular\tBrands',
-            'hint': 'Font',
-            'val': 0,
+            'hint': 'used Font',
             'align': ALIGN_TOP,
             'y': 0,
-            'font_size': fontsize,
+            'color': self.color_bg,
+            'font_color': self.color_font,
             'act': True,
             'on_change': lambda idd, idc, data: self.set_font(idd, idc, data)
             })
+        self.h_font = dlg_proc(h, DLG_CTL_HANDLE, index=n)
+        button_proc(self.h_font, BTN_SET_KIND, BTNKIND_TEXT_CHOICE)
+        button_proc(self.h_font, BTN_SET_ARROW, True)
+        button_proc(self.h_font, BTN_SET_ARROW_ALIGN, 'C')
+        button_proc(self.h_font, BTN_SET_ITEMS, 'Solid Font\nRegular Font\nBrands Font')
+        button_proc(self.h_font, BTN_SET_ITEMINDEX, 0)
+        button_proc(self.h_font, BTN_SET_FOCUSABLE, False)
 
         # filter
         self.filterid = dlg_proc(h, DLG_CTL_ADD, 'edit')
@@ -81,6 +92,8 @@ class Command:
             'align': ALIGN_TOP,
             'hint': 'Filter',
             'y': self.options['iconsize'] + 5,
+            'color': self.color_bg,
+            'font_color': self.color_font,
             'font_size': fontsize,
             'props': (False, False, True),
             'act': True,
@@ -92,6 +105,7 @@ class Command:
         dlg_proc(h, DLG_CTL_PROP_SET, index=l, prop={
             'name': 'falist',
             'align': ALIGN_CLIENT,
+            'color': self.color_bg,
             'on_draw_item': self.callback_listbox_drawitem,
             'on_click': lambda idd, idc, data: self.get_icon(idd, idc, data)
             })
@@ -105,11 +119,10 @@ class Command:
         return h
 
 
-    '''
-    fill list with items
-    '''
     def fill_list(self):
-
+        '''
+        fill list with items
+        '''
         filter = dlg_proc(self.h_dlg, DLG_CTL_PROP_GET, index=self.filterid).get('val')
 
         listbox_proc(self.h_list, LISTBOX_DELETE_ALL)
@@ -120,11 +133,10 @@ class Command:
         listbox_proc(self.h_list, LISTBOX_SET_SEL, index=0)
 
 
-    '''
-    create list item
-    '''
     def callback_listbox_drawitem(self, id_dlg, id_ctl, data='', info=''):
-
+        '''
+        create list item
+        '''
         idc = data['canvas']
         r = data['rect']
         index = data['index']
@@ -134,13 +146,19 @@ class Command:
         hex = item[1]
         iconsize = self.options['iconsize']
 
-        # background
-        bgcolor = self.color_sel if index == selected else self.color_bg
+        # set colors
+        if index == selected:
+            color = self.color_sel_font
+            bgcolor = self.color_sel_bg
+        else:
+            color = self.color_font
+            bgcolor = self.color_bg
+
         canvas_proc(idc, CANVAS_SET_BRUSH, color=bgcolor, style=BRUSH_SOLID)
         canvas_proc(idc, CANVAS_RECT_FILL, x=r[0], y=r[1], x2=r[2], y2=r[3])
 
         # name
-        canvas_proc(idc, CANVAS_SET_FONT, color=self.color_font, text='Arial', size=iconsize//2)
+        canvas_proc(idc, CANVAS_SET_FONT, color=color, text='Arial', size=iconsize//2)
         size = canvas_proc(idc, CANVAS_GET_TEXT_SIZE, text=name)
         canvas_proc(idc, CANVAS_TEXT, text=name, x=iconsize+10, y=(r[1]+r[3]-size[1])//2)
 
@@ -149,15 +167,14 @@ class Command:
         canvas_proc(idc, CANVAS_TEXT, text=chr(int(hex, 16)), x=5, y=(r[1]+r[3]-size[1])//2)
 
 
-    '''
-    reload icon list after changing font
-    '''
     def set_font(self, idd, idc, data):
-
-        cap = dlg_proc(idd, DLG_CTL_PROP_GET, index=idc).get('cap')
-        if cap == 'Brands':
+        '''
+        reload icon list after changing font
+        '''
+        sel = button_proc(self.h_font, BTN_GET_ITEMINDEX)
+        if sel == 2:
             self.font = self.options['FONT_BRANDS']
-        elif cap == 'Regular':
+        elif sel == 1:
             self.font = self.options['FONT_REGULAR']
         else:
             self.font = self.options['FONT_SOLID']
@@ -165,17 +182,15 @@ class Command:
         self.fill_list()
 
 
-    '''
-    insert selected icon code in editor
-    '''
     def get_icon(self, idd, idc, data):
-
+        '''
+        insert selected icon code in editor
+        '''
         # set selected font
-        fontid = dlg_proc(idd, DLG_CTL_FIND, prop='fafont')
-        cap = dlg_proc(idd, DLG_CTL_PROP_GET, index=fontid).get('cap')
-        if cap == 'Brands':
+        sel = button_proc(self.h_font, BTN_GET_ITEMINDEX)
+        if sel == 2:
             font = 'fab'
-        elif cap == 'Regular':
+        elif sel == 1:
             font = 'far'
         else:
             font = 'fas'
@@ -197,11 +212,10 @@ class Command:
         ed.focus()
 
 
-    '''
-    parse CSS file for icon codes
-    '''
     def parse_css(self, text):
-
+        '''
+        parse CSS file for icon codes
+        '''
         regtag = re.compile(r'(?:.fa-)(.*)(?:\:before)', re.I)
         reghex = re.compile(r'(?:content\:\s*\"\\)(.*)(?:")', re.I)
 
@@ -225,11 +239,10 @@ class Command:
                     name = ''
 
 
-    '''
-    open config file
-    '''
     def show_config(self):
-
+        '''
+        open config file
+        '''
         with open(self.options_filename, mode="w", encoding='utf8') as fout:
             json.dump(self.options, fout, indent=2)
 

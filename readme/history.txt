@@ -1,4 +1,7 @@
 
+2018.01.24
++ use theme colors 
+
 2018.01.23
 ~ changed from listview to listbox_ex
 + config file for font names and size 
