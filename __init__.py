@@ -1,4 +1,4 @@
-﻿from cudatext import *
+from cudatext import *
 import cudatext as app
 import cudatext_cmd
 import os
@@ -30,6 +30,7 @@ class Command:
                 self.options.update(json.load(fin))
 
         self.font = self.options['FONT_SOLID']
+        self.h_dlg = None
 
 
     def on_start(self, ed):
@@ -45,6 +46,16 @@ class Command:
         app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg, os.path.join(dir, 'fontawesome.png')))
 
 
+    def on_state(self, ed, state):
+        '''
+        update panel after changing theme
+        '''
+        if self.h_dlg and state in [APPSTATE_THEME_UI, APPSTATE_THEME_SYNTAX]:
+            self.get_theme_colors()
+            dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, name='filter', prop={'color': self.color_bg, 'font_color': self.color_font})
+            dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, name='falist', prop={'color': self.color_bg})
+
+
     def init_panel(self):
         '''
         create side panel
@@ -53,17 +64,7 @@ class Command:
         self.h_dlg = h
         fontsize = self.options['iconsize'] // 2
 
-        # get theme colors
-        ui = app_proc(PROC_THEME_UI_DATA_GET, '')
-        for c in ui:
-            if c['name'] == 'TreeBg':
-                self.color_bg = c['color']
-            elif c['name'] == 'TreeFont':
-                self.color_font = c['color']
-            elif c['name'] == 'TreeSelBg':
-                self.color_sel_bg = c['color']
-            elif c['name'] == 'TreeSelFont':
-                self.color_sel_font = c['color']
+        self.get_theme_colors()
 
         # font select
         n = dlg_proc(h, DLG_CTL_ADD, 'button_ex')
@@ -86,8 +87,8 @@ class Command:
         button_proc(self.h_font, BTN_SET_FOCUSABLE, False)
 
         # filter
-        self.filterid = dlg_proc(h, DLG_CTL_ADD, 'edit')
-        dlg_proc(h, DLG_CTL_PROP_SET, index=self.filterid, prop={
+        f = dlg_proc(h, DLG_CTL_ADD, 'edit')
+        dlg_proc(h, DLG_CTL_PROP_SET, index=f, prop={
             'name': 'filter',
             'align': ALIGN_TOP,
             'hint': 'Filter',
@@ -123,7 +124,7 @@ class Command:
         '''
         fill list with items
         '''
-        filter = dlg_proc(self.h_dlg, DLG_CTL_PROP_GET, index=self.filterid).get('val')
+        filter = dlg_proc(self.h_dlg, DLG_CTL_PROP_GET, name='filter').get('val')
 
         listbox_proc(self.h_list, LISTBOX_DELETE_ALL)
         for code in self.codes:
@@ -247,3 +248,19 @@ class Command:
             json.dump(self.options, fout, indent=2)
 
         file_open(self.options_filename)
+
+
+    def get_theme_colors(self):
+        '''
+        get colors from current theme
+        '''
+        ui = app_proc(PROC_THEME_UI_DATA_GET, '')
+        for c in ui:
+            if c['name'] == 'TreeBg':
+                self.color_bg = c['color']
+            elif c['name'] == 'TreeFont':
+                self.color_font = c['color']
+            elif c['name'] == 'TreeSelBg':
+                self.color_sel_bg = c['color']
+            elif c['name'] == 'TreeSelFont':
+                self.color_sel_font = c['color']
