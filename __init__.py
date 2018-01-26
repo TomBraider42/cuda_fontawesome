@@ -50,7 +50,7 @@ class Command:
         '''
         update panel after changing theme
         '''
-        if self.h_dlg and state in [APPSTATE_THEME_UI, APPSTATE_THEME_SYNTAX]:
+        if self.h_dlg and state == APPSTATE_THEME_UI:
             self.get_theme_colors()
             dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, name='filter', prop={'color': self.color_bg, 'font_color': self.color_font})
             dlg_proc(self.h_dlg, DLG_CTL_PROP_SET, name='falist', prop={'color': self.color_bg})

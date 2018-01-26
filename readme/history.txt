@@ -1,4 +1,7 @@
 
+2018.01.26
+~ update colors function
+
 2018.01.25
 ~ update colors after changing theme
 
