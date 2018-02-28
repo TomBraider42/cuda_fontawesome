@@ -4,14 +4,19 @@ desc=Search FontAwesome Icons in sidebar and insert the codes in editor.
 type=cudatext-plugin
 subdir=cuda_fontawesome
 homepage=https://github.com/TomBraider42/cuda_fontawesome
-api=1.0.220
+api=1.0.229
+
+[sidebar1]
+hint=Font Awesome
+icon=font.png
+method=show
 
 [item1]
 section=events
-events=on_start,on_state
+events=on_state
 
 [item2]
 section=commands
-caption=Font Awesome\Config...
+caption=Font Awesome\Config
 method=show_config
 menu=o
