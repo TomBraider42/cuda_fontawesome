@@ -33,7 +33,7 @@ class Command:
         self.h_dlg = None
 
 
-    def on_start(self, ed):
+    def show(self):
         '''
         read CSS file, add site panel
         '''
@@ -44,6 +44,7 @@ class Command:
 
         id_dlg = self.init_panel()
         app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg, os.path.join(dir, 'fontawesome.png')))
+        app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
 
     def on_state(self, ed, state):
