@@ -1,4 +1,7 @@
 
+2018.02.28
++ use new API in CudaText 1.43, make Cud start faster
+
 2018.01.26
 ~ update colors function
 
