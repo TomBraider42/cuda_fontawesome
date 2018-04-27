@@ -43,7 +43,7 @@ class Command:
             self.parse_css(text)
 
         id_dlg = self.init_panel()
-        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg, os.path.join(dir, 'fontawesome.png')))
+        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg))
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
 

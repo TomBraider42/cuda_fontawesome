@@ -8,7 +8,7 @@ api=1.0.229
 
 [sidebar1]
 hint=Font Awesome
-icon=font.png
+icon={dir}/fontawesome_black.png
 method=show
 
 [item1]
