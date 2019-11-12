@@ -255,13 +255,8 @@ class Command:
         '''
         get colors from current theme
         '''
-        ui = app_proc(PROC_THEME_UI_DATA_GET, '')
-        for c in ui:
-            if c['name'] == 'TreeBg':
-                self.color_bg = c['color']
-            elif c['name'] == 'TreeFont':
-                self.color_font = c['color']
-            elif c['name'] == 'TreeSelBg':
-                self.color_sel_bg = c['color']
-            elif c['name'] == 'TreeSelFont':
-                self.color_sel_font = c['color']
+        ui = app_proc(PROC_THEME_UI_DICT_GET, '')
+        self.color_bg = ui['TreeBg']['color']
+        self.color_font = ui['TreeFont']['color']
+        self.color_sel_bg = ui['TreeSelBg']['color']
+        self.color_sel_font = ui['TreeSelFont']['color']
