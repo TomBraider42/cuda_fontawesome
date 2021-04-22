@@ -3,6 +3,7 @@ import cudatext as app
 import cudatext_cmd
 import os
 import re
+import json
 import codecs
 
 
@@ -97,7 +98,9 @@ class Command:
             'color': self.color_bg,
             'font_color': self.color_font,
             'font_size': fontsize,
-            'props': (False, False, True),
+            'ex0': False, 
+            'ex1': False, 
+            'ex2': True,
             'act': True,
             'on_change': lambda idd, idc, data: self.fill_list()
             })
