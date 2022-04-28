@@ -15,7 +15,13 @@ method=show
 section=events
 events=on_state
 
-[item2]
+[item4]
+section=commands
+caption=Font Awesome\Show panel
+method=show
+menu=0
+
+[item5]
 section=commands
 caption=Font Awesome\Config
 method=show_config
