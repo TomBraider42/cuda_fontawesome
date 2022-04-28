@@ -7,6 +7,8 @@ import json
 import codecs
 
 
+FN_ICON = os.path.join(os.path.dirname(__file__), 'fontawesome_black.png')
+
 class Command:
 
 
@@ -44,7 +46,7 @@ class Command:
             self.parse_css(text)
 
         id_dlg = self.init_panel()
-        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg))
+        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (self.title, id_dlg, FN_ICON))
         app_proc(PROC_SIDEPANEL_ACTIVATE, self.title)
 
 
