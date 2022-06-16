@@ -1,3 +1,8 @@
+
+2022.04.28
++ add: added missed Command Palette item to call the plugin
+- fix: error on loading plugin: 'cannot load icon'
+
 2021.03.06
 - fix: avoid deprecated API
 
